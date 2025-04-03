@@ -25,9 +25,9 @@ function App() {
     const [selectedStation, setSelectedStation] = useState(null);
     const [showStationNames, setShowStationNames] = useState(true);
 
-    const isWithinBounds = useCallback((lat, lng) => {
+    const isWithinBounds = (lat, lng) => {
         return lat <= bounds.north && lat >= bounds.south && lng <= bounds.east && lng >= bounds.west;
-    }, [bounds]);
+    };
 
     useEffect(() => {
         fetch('stations.csv')
