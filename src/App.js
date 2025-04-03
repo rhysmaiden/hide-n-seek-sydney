@@ -15,9 +15,9 @@ const libraries = ['places']; // Add other libraries if needed
 
 const bounds = {
   north: -33.7000,
-  south: -33.92884985,
+  south: -33.93518102,
   east: 151.2109881,
-  west: 151.0667339,
+  west: 151.0241784
 };
 
 function App() {
