@@ -13,16 +13,17 @@ const center = {
 
 const libraries = ['places']; // Add other libraries if needed
 
+const bounds = {
+  north: -33.7000,
+  south: -33.92884985,
+  east: 151.2109881,
+  west: 151.0667339,
+};
+
 function App() {
     const [stations, setStations] = useState([]);
     const [selectedStation, setSelectedStation] = useState(null);
     const [showStationNames, setShowStationNames] = useState(true);
-    const [bounds, setBounds] = useState({
-        north: -33.7000,
-        south: -33.92884985,
-        east: 151.2109881,
-        west: 151.0667339,
-    });
 
     const isWithinBounds = useCallback((lat, lng) => {
         return lat <= bounds.north && lat >= bounds.south && lng <= bounds.east && lng >= bounds.west;
@@ -67,7 +68,6 @@ function App() {
             </div>
             <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={libraries}>
                 <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={12}>
-                    {/* Boundary Box (Rectangle) */}
                     <Rectangle
                         bounds={bounds}
                         options={{
@@ -104,7 +104,6 @@ function App() {
                             </Marker>
                         </React.Fragment>
                     ))}
-                    {/* You could also draw the red border using a Polyline or Polygon component */}
                 </GoogleMap>
             </LoadScript>
         </div>
