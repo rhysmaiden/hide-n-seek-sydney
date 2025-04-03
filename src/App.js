@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker, Rectangle, Circle, InfoWindow } from '@react-google-maps/api';
 
 const mapContainerStyle = {
@@ -49,7 +49,7 @@ function App() {
                 setStations(parsedStations);
             })
             .catch((error) => console.error('Error loading the CSV file:', error));
-    }, [isWithinBounds]);
+    }, []);
 
     const handleMarkerClick = (station) => {
         setSelectedStation(station);
