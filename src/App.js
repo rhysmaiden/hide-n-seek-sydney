@@ -23,7 +23,7 @@ const bounds = {
     west: 151.0241784
 };
 
-const checkboxContainerStyle = {
+const controlsContainerStyle = {
     position: 'fixed',
     bottom: '20px',
     left: '50%',
@@ -33,6 +33,9 @@ const checkboxContainerStyle = {
     padding: '10px',
     border: '1px solid #ccc',
     borderRadius: '5px',
+    display: 'flex',
+    gap: '20px',
+    alignItems: 'center',
 };
 
 function App() {
@@ -42,6 +45,7 @@ function App() {
     const [userLocation, setUserLocation] = useState(null);
     const [mapCenter, setMapCenter] = useState(center);
     const [geolocationError, setGeolocationError] = useState(null);
+    const [radius, setRadius] = useState(0); // Initial radius in meters
 
     const isWithinBounds = useCallback((lat, lng) => {
         return lat <= bounds.north && lat >= bounds.south && lng <= bounds.east && lng >= bounds.west;
@@ -97,20 +101,24 @@ function App() {
             );
 
             // Optional: For continuous tracking (uncomment the following)
-            // const watchId = navigator.geolocation.watchPosition(
-            //     handleGeolocationSuccess,
-            //     handleGeolocationError,
-            //     {
-            //         enableHighAccuracy: true,
-            //         timeout: 5000,
-            //         maximumAge: 0,
-            //     }
-            // );
-            // return () => navigator.geolocation.clearWatch(watchId);
+             const watchId = navigator.geolocation.watchPosition(
+                 handleGeolocationSuccess,
+                 handleGeolocationError,
+                 {
+                     enableHighAccuracy: true,
+                     timeout: 5000,
+                     maximumAge: 0,
+                 }
+             );
+             return () => navigator.geolocation.clearWatch(watchId);
         } else {
             setGeolocationError('Geolocation is not supported by your browser.');
         }
     }, []);
+
+    const handleRadiusChange = (event) => {
+        setRadius(parseInt(event.target.value, 10));
+    };
 
     return (
         <div style={{ overflow: 'hidden', height: '100vh' }}>
@@ -157,18 +165,32 @@ function App() {
                         </React.Fragment>
                     ))}
                     {userLocation && (
-                        <Marker
-                            position={userLocation}
-                            icon={{
-                                path: window.google.maps.SymbolPath.CIRCLE,
-                                scale: 8,
-                                fillColor: 'blue',
-                                fillOpacity: 0.8,
-                                strokeColor: 'white',
-                                strokeWeight: 1,
-                            }}
-                            title="Your Location"
-                        />
+                        <>
+                            <Marker
+                                position={userLocation}
+                                icon={{
+                                    path: window.google.maps.SymbolPath.CIRCLE,
+                                    scale: 8,
+                                    fillColor: 'blue',
+                                    fillOpacity: 0.8,
+                                    strokeColor: 'white',
+                                    strokeWeight: 1,
+                                }}
+                                title="Your Location"
+                            />
+                            <Circle
+                                center={userLocation}
+                                radius={radius}
+                                options={{
+                                    fillColor: 'blue',
+                                    fillOpacity: 0.15,
+                                    strokeColor: 'blue',
+                                    strokeOpacity: 0.5,
+                                    strokeWeight: 2,
+                                    clickable: false,
+                                }}
+                            />
+                        </>
                     )}
                 </GoogleMap>
             </LoadScript>
@@ -177,9 +199,21 @@ function App() {
                     Error: {geolocationError}
                 </div>
             )}
-            <div style={checkboxContainerStyle}>
+            <div style={controlsContainerStyle}>
                 <label>
-                    <input type="checkbox" id="toggleStations" checked={showStationNames} onChange={handleToggleChange} /> Show Station Names
+                    <input type="checkbox" checked={showStationNames} onChange={handleToggleChange} /> Show Station Names
+                </label>
+                <label>
+                    Radius:
+                    <input
+                        type="range"
+                        min="100"
+                        max="20000"
+                        step="100"
+                        value={radius}
+                        onChange={handleRadiusChange}
+                    />
+                    {radius} m
                 </label>
             </div>
         </div>
