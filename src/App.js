@@ -3,7 +3,10 @@ import { GoogleMap, LoadScript, Marker, Rectangle, Circle, InfoWindow } from '@r
 
 const mapContainerStyle = {
     height: '100vh',
-    width: '100%',
+    width: '100vw',
+    position: 'fixed', // To prevent scrolling
+    top: 0,
+    left: 0,
 };
 
 const center = {
@@ -14,10 +17,22 @@ const center = {
 const libraries = ['places']; // Add other libraries if needed
 
 const bounds = {
-  north: -33.7000,
-  south: -33.93518102,
-  east: 151.2109881,
-  west: 151.0241784
+    north: -33.7000,
+    south: -33.93518102,
+    east: 151.2109881,
+    west: 151.0241784
+};
+
+const checkboxContainerStyle = {
+    position: 'fixed',
+    bottom: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 10,
+    backgroundColor: 'white',
+    padding: '10px',
+    border: '1px solid #ccc',
+    borderRadius: '5px',
 };
 
 function App() {
@@ -60,14 +75,9 @@ function App() {
     };
 
     return (
-        <div>
-            <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, backgroundColor: 'white', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
-                <label>
-                    <input type="checkbox" id="toggleStations" checked={showStationNames} onChange={handleToggleChange} /> Show Station Names
-                </label>
-            </div>
+        <div style={{ overflow: 'hidden', height: '100vh' }}> {/* Prevent body scrolling */}
             <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={libraries}>
-                <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={12}>
+                <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={12} options={{ disableDefaultUI: true }}> {/* disableDefaultUI to prevent map controls from interfering with fixed elements */}
                     <Rectangle
                         bounds={bounds}
                         options={{
@@ -106,6 +116,11 @@ function App() {
                     ))}
                 </GoogleMap>
             </LoadScript>
+            <div style={checkboxContainerStyle}>
+                <label>
+                    <input type="checkbox" id="toggleStations" checked={showStationNames} onChange={handleToggleChange} /> Show Station Names
+                </label>
+            </div>
         </div>
     );
 }
