@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { GoogleMap, LoadScript, Marker, Rectangle, Circle, InfoWindow } from '@react-google-maps/api';
 
 const mapContainerStyle = {
     height: '100vh',
     width: '100vw',
-    position: 'fixed', // To prevent scrolling
+    position: 'fixed',
     top: 0,
     left: 0,
 };
@@ -14,7 +14,7 @@ const center = {
     lng: 151.2093,
 };
 
-const libraries = ['places']; // Add other libraries if needed
+const libraries = ['places'];
 
 const bounds = {
     north: -33.7000,
@@ -38,11 +38,14 @@ const checkboxContainerStyle = {
 function App() {
     const [stations, setStations] = useState([]);
     const [selectedStation, setSelectedStation] = useState(null);
-    const [showStationNames, setShowStationNames] = useState(true);
+    const [showStationNames, setShowStationNames] = useState(false);
+    const [userLocation, setUserLocation] = useState(null);
+    const [mapCenter, setMapCenter] = useState(center);
+    const [geolocationError, setGeolocationError] = useState(null);
 
-    const isWithinBounds = (lat, lng) => {
+    const isWithinBounds = useCallback((lat, lng) => {
         return lat <= bounds.north && lat >= bounds.south && lng <= bounds.east && lng >= bounds.west;
-    };
+    }, []);
 
     useEffect(() => {
         fetch('stations.csv')
@@ -64,7 +67,7 @@ function App() {
                 setStations(parsedStations);
             })
             .catch((error) => console.error('Error loading the CSV file:', error));
-    }, []);
+    }, [isWithinBounds]);
 
     const handleMarkerClick = (station) => {
         setSelectedStation(station);
@@ -74,10 +77,50 @@ function App() {
         setShowStationNames(event.target.checked);
     };
 
+    const handleGeolocationSuccess = (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        setMapCenter({ lat: latitude, lng: longitude });
+        setGeolocationError(null);
+    };
+
+    const handleGeolocationError = (error) => {
+        setGeolocationError(error.message);
+        console.error('Error getting user location:', error);
+    };
+
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                handleGeolocationSuccess,
+                handleGeolocationError
+            );
+
+            // Optional: For continuous tracking (uncomment the following)
+            // const watchId = navigator.geolocation.watchPosition(
+            //     handleGeolocationSuccess,
+            //     handleGeolocationError,
+            //     {
+            //         enableHighAccuracy: true,
+            //         timeout: 5000,
+            //         maximumAge: 0,
+            //     }
+            // );
+            // return () => navigator.geolocation.clearWatch(watchId);
+        } else {
+            setGeolocationError('Geolocation is not supported by your browser.');
+        }
+    }, []);
+
     return (
-        <div style={{ overflow: 'hidden', height: '100vh' }}> {/* Prevent body scrolling */}
+        <div style={{ overflow: 'hidden', height: '100vh' }}>
             <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY} libraries={libraries}>
-                <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={12} options={{ disableDefaultUI: true }}> {/* disableDefaultUI to prevent map controls from interfering with fixed elements */}
+                <GoogleMap
+                    mapContainerStyle={mapContainerStyle}
+                    center={mapCenter}
+                    zoom={12}
+                    options={{ disableDefaultUI: true }}
+                >
                     <Rectangle
                         bounds={bounds}
                         options={{
@@ -102,7 +145,6 @@ function App() {
                             />
                             <Marker
                                 position={{ lat: station.lat, lng: station.lng }}
-                                title={station.name}
                                 onClick={() => handleMarkerClick(station)}
                                 visible={showStationNames}
                             >
@@ -114,8 +156,27 @@ function App() {
                             </Marker>
                         </React.Fragment>
                     ))}
+                    {userLocation && (
+                        <Marker
+                            position={userLocation}
+                            icon={{
+                                path: window.google.maps.SymbolPath.CIRCLE,
+                                scale: 8,
+                                fillColor: 'blue',
+                                fillOpacity: 0.8,
+                                strokeColor: 'white',
+                                strokeWeight: 1,
+                            }}
+                            title="Your Location"
+                        />
+                    )}
                 </GoogleMap>
             </LoadScript>
+            {geolocationError && (
+                <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, backgroundColor: 'yellow', padding: '10px', border: '1px solid orange', borderRadius: '5px' }}>
+                    Error: {geolocationError}
+                </div>
+            )}
             <div style={checkboxContainerStyle}>
                 <label>
                     <input type="checkbox" id="toggleStations" checked={showStationNames} onChange={handleToggleChange} /> Show Station Names
