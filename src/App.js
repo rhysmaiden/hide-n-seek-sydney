@@ -270,14 +270,13 @@ function App() {
         <label>
           Radius:
           <input
-            type="range"
+            type="number"
             min="0" // Changed min to 0
             max="20000"
             step="100"
             value={radius}
             onChange={handleRadiusChange}
           />
-          {radius} m
         </label>
         <button onClick={toggleMeasuringMode}>
           {measuringMode ? 'Disable Measuring' : 'Enable Measuring'}
