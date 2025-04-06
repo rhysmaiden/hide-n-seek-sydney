@@ -98,27 +98,35 @@ function App() {
   };
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        handleGeolocationSuccess,
-        handleGeolocationError
-      );
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setUserLocation({ lat: latitude, lng: longitude });
+                    setGeolocationError(null);
+                  },
+                handleGeolocationError
+              );
 
-      // Optional: For continuous tracking (uncomment the following)
-      const watchId = navigator.geolocation.watchPosition(
-        handleGeolocationSuccess,
-        handleGeolocationError,
-        {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0,
-        }
-      );
-      return () => navigator.geolocation.clearWatch(watchId);
-    } else {
-      setGeolocationError('Geolocation is not supported by your browser.');
-    }
-  }, []);
+            // Optional: For continuous tracking of the user's location WITHOUT centering the map
+            const watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setUserLocation({ lat: latitude, lng: longitude });
+                    setGeolocationError(null);
+                  },
+                handleGeolocationError,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0,
+                  }
+              );
+            return () => navigator.geolocation.clearWatch(watchId);
+          } else {
+            setGeolocationError('Geolocation is not supported by your browser.');
+          }
+      }, []);
 
   const handleRadiusChange = (event) => {
     setRadius(parseInt(event.target.value, 10));
@@ -126,32 +134,32 @@ function App() {
 
   // --- Distance Measurement Handlers ---
   const handleMapClick = 
-    (event) => {
-      console.log(measuringMode)
-      if (!measuringMode) return;
-      console.log(event.latLng);
+  (event) => {
+    console.log(measuringMode)
+    if (!measuringMode) return;
+    console.log(event.latLng);
 
-      const lat = event.latLng.lat(); // Correct way to get latitude
-      const lng = event.latLng.lng(); // Correct way to get longitude
-      const latLng = { lat, lng };
+    const lat = event.latLng.lat(); // Correct way to get latitude
+    const lng = event.latLng.lng(); // Correct way to get longitude
+    const latLng = { lat, lng };
 
-      if (!startPoint) {
-        setStartPoint(latLng);
-        setEndPoint(null);
-        setDistance(null);
-      } else if (!endPoint) {
-        setEndPoint(latLng);
-        const dist = window.google.maps.geometry.spherical.computeDistanceBetween(
-          new window.google.maps.LatLng(startPoint.lat, startPoint.lng),
-          new window.google.maps.LatLng(lat, lng)
-        );
-        setDistance(dist);
-      } else {
-        setStartPoint(latLng);
-        setEndPoint(null);
-        setDistance(null);
-      }
-    };
+    if (!startPoint) {
+      setStartPoint(latLng);
+      setEndPoint(null);
+      setDistance(null);
+    } else if (!endPoint) {
+      setEndPoint(latLng);
+      const dist = window.google.maps.geometry.spherical.computeDistanceBetween(
+        new window.google.maps.LatLng(startPoint.lat, startPoint.lng),
+        new window.google.maps.LatLng(lat, lng)
+      );
+      setDistance(dist);
+    } else {
+      setStartPoint(latLng);
+      setEndPoint(null);
+      setDistance(null);
+    }
+  };
 
   const toggleMeasuringMode = () => {
     setMeasuringMode(!measuringMode);
